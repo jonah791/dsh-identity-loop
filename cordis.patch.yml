@@ -1,0 +1,4 @@
+- insert:
+    - id: agent-identity-loop
+      name: dsh-identity-loop
+      config: {}
