@@ -73,6 +73,7 @@ idop_begin {site,purpose} ─► opId + 离线简报（站点知识 / vault 字�
 | 7 | `idop_settle` | 收口：op 终态 + 站点知识 | 无 | `id_site_remember` 合并 + 加护栏与新职责 |
 
 **删除**：`passbook_get`（值回显，与 L2 直接冲突）。
+
 **移出工具面**：`passbook_selftest` → `scripts/verify-loop.mjs`（自检是开发者动作，不是「我此刻要做的身份操作」）。
 
 ### 5.2 数据落点
@@ -151,6 +152,7 @@ idop_begin {site,purpose} ─► opId + 离线简报（站点知识 / vault 字�
 | 2026-09-23 | 移植的旧**契约**测试 5 条失败——逐条核对后确认**不是回归而是设计差异**（旧契约断言 8 工具 / 函数式 `textOut` / selftest 在工具面内；本件按设计改成 7 工具 / 对象式 `textOut` / selftest 移出工具面）⇒ 删除该文件，改写为本件自己的契约测试（N1/N2 的源码级集合断言）。 |
 | 2026-09-23 | 自己写错一条断言并当场修正：N2 原本 grep 整个源码找值承载字段名，而 `password:` 在**参数定义**里是合法的（值走 stdin）⇒ 判据收到 `output` 契约上。**判据要打在值的位置，不整段匹配**——与今日 `status.ts` 那次同型。 |
 | 2026-09-23 | 实现中发现 `planAudit` 的真实签名是 `(entries, values, opts)`（值作为第二参传入，产出只有分档与指纹）⇒ 深检路径据此改写，值只在函数内流转、不进任何返回。 |
+| 2026-09-23 | **纠正设计稿的一处读数**：设计稿 N14/B5 写「5 站点、**8 条** facts」，实测逐键为 **6 条**（qrypty 1 / github 1 / moltjobs 1 / clustly 2 / chrome-extension 1）——逐站点列举对得上，**只有合计算错**。迁移实测：旧文件 sha256 `48e2285a95c082d9…` 前后**逐字相同**，新旧 facts 均 6 ⇒ 无损。判据以实测为准。 |
 
 ## 10 · 未决问题
 
