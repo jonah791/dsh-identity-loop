@@ -499,7 +499,19 @@ export function apply(ctx: Context, config: Config): void {
       opId: { type: 'string', required: true, description: '要收口的 opId' },
       outcome: { type: 'string', required: true, description: 'sealed | abandoned' },
       site: { type: 'string', description: '站点（缺省取该 op 的 begin 记录）' },
-      facts: { type: 'array', items: { type: 'object' }, description: '站点知识：[{key,value,note}]' },
+      facts: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            key: { type: 'string' },
+            value: { type: 'string' },
+            note: { type: 'string' },
+          },
+        },
+        description: '站点知识：[{key,value,note}]',
+      },
       note: { type: 'string', description: '收口说明' },
     },
     output: textOut,
