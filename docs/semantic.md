@@ -127,9 +127,11 @@ idop_begin {site,purpose} ─► opId + 离线简报（站点知识 / vault 字�
 | N14 | 构建通过 | `tsc -p tsconfig.json` 退出码 0 | 已实测 |
 | N15 | 迁移零丢失（条目数与逐键在场） | `node scripts/migrate-site-registry.mjs` 打印站点数与 facts 数 | 待验收 |
 | N16 | 迁移只读旧文件（sha256 前后相同） | 同上脚本打印的前后 sha256 | 待验收 |
-| N17 | 插件挂载且 7 工具可答 | `idop_begin` 返回 `opId` 与简报 | 待验收 |
-| N18 | 一次真实身份操作完整闭环 | `begin → entry → stow → use → settle` 五步各有审计行、台账有终态、站点知识可溯源到 `opId` | 待线上验收 |
-| N19 | 退役后可回退 | 旧件重新 `plugin_mount` 后条目数与退役前一致 | 待线上验收 |
+| N17 | **加载冒烟**：stub ctx 真跑 `apply`，7 个工具全部通过 `defineTool` 的 schema 校验 | `node --test tests/load.test.mjs`（挂载前即可拦住 schema 类加载失败） | 已实测 |
+| N18 | 插件挂载且 7 工具可答 | 实测：`idop_ledger` 返回凭据账 **35 条** + 体检提案 1 条；`idop_begin` 返回 `opId` 与迁移后的站点知识（clustly.ai 2 条 facts） | 已实测 |
+| N19 | op 闭环在真实调用里成立 | 实测：`idop_begin` → `idop_settle{sealed}`，审计两次均 `written`，收口后该 op 从「未收口」消失 | 已实测 |
+| N20 | 一次真实身份操作完整闭环（含取码/取值/浏览器登录） | `begin → entry → stow → use → settle` 五步走真实站点 | 待线上验收 |
+| N21 | 退役后可回退 | 旧件重新 `plugin_mount` 后条目数与退役前一致 | 待线上验收 |
 
 ## 8 · 与实现的关系
 
@@ -153,6 +155,8 @@ idop_begin {site,purpose} ─► opId + 离线简报（站点知识 / vault 字�
 | 2026-09-23 | 自己写错一条断言并当场修正：N2 原本 grep 整个源码找值承载字段名，而 `password:` 在**参数定义**里是合法的（值走 stdin）⇒ 判据收到 `output` 契约上。**判据要打在值的位置，不整段匹配**——与今日 `status.ts` 那次同型。 |
 | 2026-09-23 | 实现中发现 `planAudit` 的真实签名是 `(entries, values, opts)`（值作为第二参传入，产出只有分档与指纹）⇒ 深检路径据此改写，值只在函数内流转、不进任何返回。 |
 | 2026-09-23 | **纠正设计稿的一处读数**：设计稿 N14/B5 写「5 站点、**8 条** facts」，实测逐键为 **6 条**（qrypty 1 / github 1 / moltjobs 1 / clustly 2 / chrome-extension 1）——逐站点列举对得上，**只有合计算错**。迁移实测：旧文件 sha256 `48e2285a95c082d9…` 前后**逐字相同**，新旧 facts 均 6 ⇒ 无损。判据以实测为准。 |
+| 2026-09-23 | **挂载事故 + 修复 + 防复发**：`idop_settle` 的 `facts` 参数写成 `items: { type: 'object' }`，而 DSH 的 schema DSL 要求 object 型 schema **显式声明 `additionalProperties`** ⇒ `defineTool` 抛 `JsonSchemaError` ⇒ **整件加载失败、7 个工具全不在场**；而 `plugin_boot_status` 仍报「live / 需重启 0」（它比构建 mtime，不是真加载）、`tsc` 也查不出（schema 是运行时校验）。修复：补 `additionalProperties: false` + 字段表。**防复发**：新增 `tests/load.test.mjs`——用 stub ctx 真跑 `apply`，把每个工具送进 `defineTool`，**在挂载前**拦住这一类。 |
+| 2026-09-23 | **终验纠正 L11 的表述**：`grep -rn 'vault.ps1\|vaultScript' self-plugins/*/src/*.ts` 实测命中**两个**插件——本件与 `dsh-growth-profile`（既有消费者，做资产盘点时读 `list-json` 非密元数据，不是凭据使用）。设计稿 B 段测量未查其他消费者，故 L11 原表述「本件是 vault 元数据的**唯一**读取面」**事实上不成立**；准确表述是「本件是**身份族内** vault 元数据的唯一读取面与凭据的唯一写入/取用面」。按实测改正表述，不改实现。 |
 
 ## 10 · 未决问题
 
